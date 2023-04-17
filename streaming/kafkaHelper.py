@@ -3,14 +3,13 @@ import numpy as np
 import datetime as dt
 
 from kafka import KafkaProducer, KafkaConsumer
-from config import config
 
 
 def initProducer():
     # init an instance of KafkaProducer
     print('Initializing Kafka producer at {}'.format(dt.datetime.utcnow()))
     producer = KafkaProducer(
-      bootstrap_servers=config['kafka_broker'],
+      bootstrap_servers='localhost:9092',
       value_serializer=lambda v: json.dumps(v).encode('utf-8')
     )
     print('Initialized Kafka producer at {}'.format(dt.datetime.utcnow()))
@@ -19,7 +18,7 @@ def initProducer():
 
 def initConsumer(topic, timeout=1000):
     # init an instance of KafkaConsumer
-    consumer = KafkaConsumer(topic, bootstrap_servers=config['kafka_broker'], group_id=None,
+    consumer = KafkaConsumer(topic, bootstrap_servers='localhost:9092', group_id=None,
         auto_offset_reset='earliest', enable_auto_commit=False, consumer_timeout_ms=timeout,
         value_deserializer=lambda m: json.loads(m.decode('utf-8')))
     return consumer

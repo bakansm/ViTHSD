@@ -4,21 +4,20 @@ import tensorflow as tf
 import numpy as np
 import pandas as pd
 
+from preprocessing import preprocessing
 from keras.utils import pad_sequences
-from transformers import AutoTokenizer
+from transformers import AutoTokenizer, TFAutoModel, TFXLMRobertaModel
 from kafkaHelper import initProducer, produceRecord
-from config import config, params
 
 producer = initProducer()
 TOPIC = 'youtube'
-VID_ID = "RS8tg7Q1-hQ"
-
+VID_ID = "6yKh7DqPSy8"
 
 # Model
 class TargetedHSD:
     def __init__(self, model_path = None, tokenizer_path = None):
         if not model_path:
-            self.__model_path = '../model/xlm-roberta-base.h5'
+            self.__model_path = '../saved_model/bigrulstmcnn_xlmr2.h5'
         else:
             self.__model_path = model_path
         if not tokenizer_path:
@@ -26,14 +25,32 @@ class TargetedHSD:
         else:
             self.__tokenizer_path = tokenizer_path
         
-        self._tokenizer = AutoTokenizer.from_pretrained(self.__tokenizer_path)
 
+        self._tokenizer = AutoTokenizer.from_pretrained(self.__tokenizer_path)
+        self._model = tf.keras.models.load_model(self.__model_path, custom_objects={'TFXLMRobertaModel': TFXLMRobertaModel})
         self.result = None
         self.orginal_label = None
     
     def predict(self, text):
+        # encoded_text = self._tokenizer.texts_to_sequences([text])
+        # encoded_text = pad_sequences(encoded_text, maxlen=100, padding='post')
         encoded_text = np.array(self._tokenizer([text], max_length=100, padding='max_length', truncation=True)['input_ids'])
-        pred = np.argmax(encoded_text.reshape(-1, 5, 4), axis=-1)
+        encoded_text = {
+            "input_ids": np.asarray(self._tokenizer([text], max_length=50, padding='max_length', truncation=True)['input_ids']),
+            "attention_mask": np.asarray(self._tokenizer([text], max_length=50, padding='max_length', truncation=True)['attention_mask'])
+        }
+        pred = self._model.predict(encoded_text)
+        pred = np.argmax(pred.reshape(-1, 5, 4), axis=-1)
+
+        # y_test_pred_new = []
+        # for y in pred:
+        #     lb = []
+        #     for i in range(0, len(y)):
+        #         if y[i] >= 0.5:
+        #             lb.append(1)
+        #         else:
+        #             lb.append(0)
+        #     y_test_pred_new.append(lb)
         self.orginal_label = pred[0]
     
     def return_label(self):
@@ -50,6 +67,23 @@ class TargetedHSD:
             3: "race",
             4: "politics"
         }
+        # LABEL = [('individual', 1),
+        #             ('individual', 2),
+        #             ('individual', 3),
+        #             ('groups', 1),
+        #             ('groups', 2),
+        #             ('groups', 3),
+        #             ('religion/creed', 1),
+        #             ('religion/creed', 2),
+        #             ('religion/creed', 3),
+        #             ('race/ethnicity', 1),
+        #             ('race/ethnicity', 2),
+        #             ('race/ethnicity', 3),
+        #             ('politics', 1),
+        #             ('politics', 2),
+        #             ('politics', 3)
+        #         ]
+        print(self.orginal_label)
         for i in range(0, len(self.orginal_label)):
             if self.orginal_label[i] > 0:
                 t = LABEL[i] + "#" + TYPE[int(self.orginal_label[i])]
@@ -70,14 +104,15 @@ if(chat.is_alive()):
         for raw_data in chat.get().sync_items():
 
             # Predict
-            cls.predict(raw_data.message)
+            preprocessed_data = preprocessing(raw_data.message)
+            cls.predict(preprocessed_data)
 
             data = {
-                'timestamp': raw_data.timestamp / 1000,
+                'timestamp': raw_data.timestamp,
                 'datetime': raw_data.datetime, 
                 'userid': raw_data.author.channelId,
                 'username': raw_data.author.name,
-                'message': raw_data.message,
+                'message': preprocessed_data,
                 'predict': cls.return_label()
             }
 

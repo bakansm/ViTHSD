@@ -1,18 +1,21 @@
 import pandas as pd 
 import numpy as np 
 import datetime as dt
+from pymongo.mongo_client import MongoClient
+from pymongo.server_api import ServerApi
 
-from kafkaHelper import produceRecord, consumeRecord, initConsumer, initProducer
-from config import config, params
+from kafkaHelper import consumeRecord, initConsumer
 
-# initialize Kafka consumers and producer
-print('Starting Apache Kafka consumers and producer')
-consumer = initConsumer('youtube')
+print('Starting Apache Kafka consumers')
+consumer = initConsumer('result')
 
-# intialize local dataframe
-data = pd.DataFrame(columns=['timestamp','datetime', 'id','username', 'message' ])
+uri = "mongodb+srv://bakansm:Khanhcool2001@kafkasink.6c3trd5.mongodb.net/?retryWrites=true&w=majority"
+client = MongoClient(uri, server_api=ServerApi('1'))
+db = client['YoutubeHSD']
+collection = db['YoutubeHSD']
 
 while True:
     records = consumeRecord(consumer)
     for r in records:
         print(r)
+        collection.insert_one(r).inserted_id
