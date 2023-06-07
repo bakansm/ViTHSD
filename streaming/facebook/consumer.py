@@ -7,7 +7,7 @@ from pymongo.server_api import ServerApi
 from kafkaHelper import consumeRecord, initConsumer
 
 print('Starting Apache Kafka consumers')
-consumer = initConsumer('result')
+consumer = initConsumer('youtube')
 
 uri = "mongodb+srv://bakansm:Khanhcool2001@kafkasink.6c3trd5.mongodb.net/?retryWrites=true&w=majority"
 client = MongoClient(uri, server_api=ServerApi('1'))
