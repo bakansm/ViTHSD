@@ -11,8 +11,8 @@ consumer = initConsumer('tiktok')
 
 uri = "mongodb+srv://bakansm:Khanhcool2001@kafkasink.6c3trd5.mongodb.net/?retryWrites=true&w=majority"
 client = MongoClient(uri, server_api=ServerApi('1'))
-db = client['YoutubeHSD']
-collection = db['YoutubeHSD']
+db = client['TiktokHSD']
+collection = db['TiktokHSD']
 
 while True:
     records = consumeRecord(consumer)
