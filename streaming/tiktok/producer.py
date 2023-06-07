@@ -16,16 +16,17 @@ async def on_connect(_: ConnectEvent):
     print("Connected to Room ID:", client.room_id)
 
 async def on_comment(event: CommentEvent):
-    # start = time.time()
-    # predicted_data = predict(event.comment)
-    # end = time.time()
-    # predict_time = end - start
+    start = time.time()
+    predicted_data = predict(event.comment)
+    end = time.time()
+    predict_time = end - start
 
     data = {
         'timestamp': dt.datetime.now().timestamp(),
         'datetime': dt.datetime.now(),
         'message': event.comment,
-        # 'predict': predicted_data
+        'predict': predicted_data,
+        'predict-time': predict_time,
     }
 
     produceRecord(data, producer=producer, topic='tiktok')
