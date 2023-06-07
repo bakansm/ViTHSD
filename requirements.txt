@@ -1,0 +1,8 @@
+pymongo
+pyspark==3.3.2
+kafka-python
+TikTokLive
+pychat
+pandas
+transformers
+tensorflow
