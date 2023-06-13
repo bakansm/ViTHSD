@@ -6,3 +6,5 @@ TikTokLive
 pytchat
 pandas
 transformers
+flask
+requests
