@@ -1,5 +1,5 @@
 import re
-STOPWORDS = '../preprocess_data/vietnamese-stopwords-dash.txt'
+STOPWORDS = '/home/bakansm/Code/ViTHSD-Vietnamese-Targeted-Hate-Speech-Detection/preprocess_data/vietnamese-stopwords-dash.txt'
 with open(STOPWORDS, "r") as ins:
     stopwords = []
     for line in ins:

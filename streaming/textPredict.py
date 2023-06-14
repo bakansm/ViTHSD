@@ -1,10 +1,16 @@
 import time
-import sys 
+import sys
 
-# from predict import predict
+from predict import predict
 from flask import Flask, request
 from flask_cors import cross_origin, CORS
 from functools import wraps
+
+# Create a Flask app
+app = Flask(__name__)
+CORS(app)
+app.config['CORS_HEADERS'] = 'Content-Type'
+
 
 def unpack(response, default_code=200):
     if not isinstance(response, tuple):
@@ -41,23 +47,25 @@ def enable_cors(func):
 
     return wrapper
 
+# Add a route that accepts POST requests from the React form
+
+
+@app.route('/api', methods=['POST'])
+@cross_origin()
+def api_post():
+    # Get the form data from the request
+    payload = request.get_json()
+    print(payload)
+    message = payload["message"]
+    print(message)
+    # label = "dmm"
+    label = predict(message)
+    print(label)
+    # Return a response to the React form
+    return {"code": 200, "data": {"label": label}, "msg": "Success"}
+
+
 # Python file
 if __name__ == '__main__':
-  # Create a Flask app
-  app = Flask(__name__)
-  CORS(app)
-  
-  # Add a route that accepts POST requests from the React form
-  @app.route('/api/', methods=['POST'])
-  @enable_cors
-  def api_post():
-    # Get the form data from the request
-    data = request.json['text-input']
-    
-    # Return a response to the React form
-    return jsonify({'message': 'Your name has been saved'})
-    
-  # Run the Flask app
-  app.run(debug=True)
-
-
+    # Run the Flask app
+    app.run(debug=True)
