@@ -11,20 +11,21 @@ from transformers import AutoTokenizer, TFAutoModel, TFXLMRobertaModel
 class TargetedHSD:
     def __init__(self, model_path = None, tokenizer_path = None):
         if not model_path:
-            self.__model_path = '../saved_model/bigrulstmcnn_xlmr.h5'
+            self.__model_path = '/home/bakansm/Code/ViTHSD-Vietnamese-Targeted-Hate-Speech-Detection/saved_model/bigrulstmcnn_xlmr.h5'
         else:
             self.__model_path = model_path
         if not tokenizer_path:
             self.__tokenizer_path = 'xlm-roberta-base'
         else:
             self.__tokenizer_path = tokenizer_path
-        
+
 
         self._tokenizer = AutoTokenizer.from_pretrained(self.__tokenizer_path)
         self._model = tf.keras.models.load_model(self.__model_path, custom_objects={'TFXLMRobertaModel': TFXLMRobertaModel})
         self.result = None
         self.orginal_label = None
-    
+
+
     def predict(self, text):
         # encoded_text = self._tokenizer.texts_to_sequences([text])
         # encoded_text = pad_sequences(encoded_text, maxlen=100, padding='post')

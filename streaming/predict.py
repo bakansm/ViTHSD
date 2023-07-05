@@ -80,7 +80,7 @@ class TargetedHSD:
         # print(self.orginal_label)
         for i in range(0, len(self.orginal_label)):
             if self.orginal_label[i] > 0:
-                t = LABEL[i] + "#" + TYPE[int(self.orginal_label[i])]
+                t = LABEL[i] + ": " + TYPE[int(self.orginal_label[i])]
                 true_labels.append(t)
 
         self.result = true_labels

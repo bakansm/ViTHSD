@@ -2,45 +2,30 @@ from pyspark.sql import Window
 from pyspark.sql.types import *
 from pyspark.sql.functions import *
 from pyspark.sql import SparkSession
-from config import config, params
-from pyspark.ml.feature import StringIndexer
-from pyspark.ml.feature import VectorAssembler
-
+from config import config
+# from pyspark.ml.feature import StringIndexer
+# from pyspark.ml.feature import VectorAssembler
 
 KAFKA_BOOTSTRAP_SERVER = "localhost:9092"
-# KAFKA_TOPIC = "{0},{1},{2},{3},{4},{5},{6}" \
-#               .format(config['topic_1'],
-#                       config['topic_2'],
-#                       config['topic_3'],
-#                       config['topic_4'],
-#                       config['topic_5'],
-#                       config['topic_6'],
-#                       config['topic_7'])
 CHECKPOINT_LOCATION = "./checkpoint"
-
 KAFKA_TOPIC = 'youtube'
 
-
-### Khởi tạo spark
 spark = SparkSession \
     .builder \
     .appName("Kafka streaming test") \
     .master('local[*]') \
     .getOrCreate()
 
-
-### Tạo khung dataframe
-schema = StructType([ 
+schema = StructType([
   StructField("timestamp", TimestampType(), True),
   StructField("datetime" , DateType(), True),
   StructField("userid", StringType(), True),
   StructField("username", StringType(), True),
   StructField("message" , StringType(), True),
-  StructField("predict", StringType() , True),
+  StructField("predict", ArrayType(StringType()) , True),
 ])
 
-
-### Lấy dữ liệu từ kafka ( định dạng json )
+# Read Dataframe
 jsonData = spark \
   .readStream \
   .format("kafka") \
@@ -51,29 +36,162 @@ jsonData = spark \
   .option("failOnDataLoss","false") \
   .load()
 
-### Chuyển json sang datafram pyspark
-dataframe = jsonData.select(from_json(col("value").cast("string"), schema).alias("value")).select(col("value.*"))
+# Dataframe handle
+df_json = jsonData \
+          .select(from_json(col("value").cast("string"), schema).alias("value")) \
+          .select(col("value.*"))
 
-# dataframe = dataframe.groupBy('currency').agg(avg('amount').cast('Float').alias('average'), current_timestamp().alias('date'))
+df_grouped = df_json \
+          .withColumn("predict", explode(col("predict"))) \
+          .groupBy("predict").count()
 
-# dataframe.printSchema()
+df_clean = df_grouped \
+          .filter(col('predict').isin(["individual#clean", "groups#clean", "race#clean","religion#clean","politics#clean"])) \
+          .withColumn('label', lit('clean')) \
+          .groupBy(col('label')) \
+          .sum('count')
 
-# ############################# IMPORTANT #############################
-# ### ---> Code mô hình máy học ở đây khúc này bằng dataframe  <--- ###
-# #####################################################################
+# df_offensive = df_grouped \
+#           .filter(col('predict').isin(["individual#offensive", "groups#offensive", "race#offensive","religion#offensive","politics#offensive"])) \
+#           .withColumn('label', lit('offensive')) \
+#           .groupBy(col('label')) \
+#           .sum('count')
 
-### Chuyển dataframe ngược lại json để thêm vào topic
-reward_data = dataframe.select(to_json(struct("*")).alias("value"))
+# df_hate = df_grouped \
+#           .filter(col('predict').isin(["individual#hate", "groups#hate", "race#hate","religion#hate","politics#hate"])) \
+#           .withColumn('label', lit('hate')) \
+#           .groupBy(col('label')) \
+#           .sum('count')
 
-### Thêm data vào lại topic
-ds = reward_data \
+# df_individual = df_grouped \
+#           .filter(col('predict').isin(["individual#clean", "individual#offensive", "individual#hate"])) \
+#           .withColumn('target', lit('invididual')) \
+#           .groupBy(col('target')) \
+#           .sum('count')
+
+# df_groups = df_grouped \
+#           .filter(col('predict').isin(["groups#clean", "groups#offensive", "groups#hate"])) \
+#           .withColumn('target', lit('groups')) \
+#           .groupBy(col('target')) \
+#           .sum('count')
+ 
+# df_religion = df_grouped \
+#           .filter(col('predict').isin(["religion#clean", "religion#offensive", "religion#hate"])) \
+#           .withColumn('target', lit('religion')) \
+#           .groupBy(col('target')) \
+#           .sum('count')
+
+# df_race = df_grouped\
+#           .filter(col('predict').isin(["race#clean", "race#offensive", "race#hate"])) \
+#           .withColumn('target', lit('race')) \
+#           .groupBy(col('target')) \
+#           .sum('count')
+
+# df_politics = df_grouped\
+#           .filter(col('predict').isin(["politics#clean", "politics#offensive", "politics#hate"]))\
+#           .withColumn('target', lit('politics'))  \
+#           .groupBy(col('target')) \
+#           .sum('count')
+
+
+# Write Datastream
+ds = df_json \
+  .select(to_json(struct("*")).alias("value")) \
+  .writeStream \
+  .format("kafka") \
+  .trigger(processingTime="3 seconds") \
+  .option("kafka.bootstrap.servers", KAFKA_BOOTSTRAP_SERVER) \
+  .option("checkpointLocation", CHECKPOINT_LOCATION) \
+  .outputMode("append") \
+  .option("topic", "result") \
+  .start()
+
+ds_clean = df_clean \
+  .select(to_json(struct("*")).alias("value")) \
   .writeStream \
   .format("kafka") \
   .trigger(processingTime="1 seconds") \
   .option("kafka.bootstrap.servers", KAFKA_BOOTSTRAP_SERVER) \
-  .option("checkpointLocation", CHECKPOINT_LOCATION) \
-  .outputMode("update") \
+  .option("checkpointLocation",CHECKPOINT_LOCATION) \
+  .outputMode("append") \
   .option("topic", "result") \
   .start()
+
+# ds_offensive = df_offensive \
+#   .select(to_json(struct("*")).alias("value")) \
+#   .writeStream \
+#   .format("kafka") \
+#   .trigger(processingTime="3 seconds") \
+#   .option("kafka.bootstrap.servers", KAFKA_BOOTSTRAP_SERVER) \
+#   .option("checkpointLocation", CHECKPOINT_LOCATION) \
+#   .outputMode("append") \
+#   .option("topic", "result") \
+#   .start()
+
+# ds_hate = df_hate \
+#   .select(to_json(struct("*")).alias("value")) \
+#   .writeStream \
+#   .format("kafka") \
+#   .trigger(processingTime="3 seconds") \
+#   .option("kafka.bootstrap.servers", KAFKA_BOOTSTRAP_SERVER) \
+#   .option("checkpointLocation", CHECKPOINT_LOCATION) \
+#   .outputMode("append") \
+#   .option("topic", "result") \
+#   .start()
+
+# ds_individual = df_individual \
+#   .select(to_json(struct("*")).alias("value")) \
+#   .writeStream \
+#   .format("kafka") \
+#   .trigger(processingTime="3 seconds") \
+#   .option("kafka.bootstrap.servers", KAFKA_BOOTSTRAP_SERVER) \
+#   .option("checkpointLocation", CHECKPOINT_LOCATION) \
+#   .outputMode("append") \
+#   .option("topic", "result") \
+#   .start()
+
+# ds_groups = df_groups \
+#   .select(to_json(struct("*")).alias("value")) \
+#   .writeStream \
+#   .format("kafka") \
+#   .trigger(processingTime="3 seconds") \
+#   .option("kafka.bootstrap.servers", KAFKA_BOOTSTRAP_SERVER) \
+#   .option("checkpointLocation", CHECKPOINT_LOCATION) \
+#   .outputMode("append") \
+#   .option("topic", "result") \
+#   .start()
+
+# ds_religion = df_religion \
+#   .select(to_json(struct("*")).alias("value")) \
+#   .writeStream \
+#   .format("kafka") \
+#   .trigger(processingTime="3 seconds") \
+#   .option("kafka.bootstrap.servers", KAFKA_BOOTSTRAP_SERVER) \
+#   .option("checkpointLocation", CHECKPOINT_LOCATION) \
+#   .outputMode("append") \
+#   .option("topic", "result") \
+#   .start()
+
+# ds_race = df_race \
+#   .select(to_json(struct("*")).alias("value")) \
+#   .writeStream \
+#   .format("kafka") \
+#   .trigger(processingTime="3 seconds") \
+#   .option("kafka.bootstrap.servers", KAFKA_BOOTSTRAP_SERVER) \
+#   .option("checkpointLocation", CHECKPOINT_LOCATION) \
+#   .outputMode("append") \
+#   .option("topic", "result") \
+#   .start()
+
+# ds_politics = df_politics \
+#   .select(to_json(struct("*")).alias("value")) \
+#   .writeStream \
+#   .format("kafka") \
+#   .trigger(processingTime="3 seconds") \
+#   .option("kafka.bootstrap.servers", KAFKA_BOOTSTRAP_SERVER) \
+#   .option("checkpointLocation", CHECKPOINT_LOCATION) \
+#   .outputMode("append") \
+#   .option("topic", "result") \
+#   .start()
 
 ds.awaitTermination()

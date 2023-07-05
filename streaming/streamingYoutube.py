@@ -1,16 +1,15 @@
-import time
-import sys
+import threading
 
 from predict import predict
 from flask import Flask, request
 from flask_cors import cross_origin, CORS
 from functools import wraps
+from producer import kafka_producer
 
 # Create a Flask app
 app = Flask(__name__)
 CORS(app)
 app.config['CORS_HEADERS'] = 'Content-Type'
-
 
 def unpack(response, default_code=200):
     if not isinstance(response, tuple):
@@ -30,7 +29,6 @@ def unpack(response, default_code=200):
     else:
         raise ValueError("Too many response values")
 
-
 def enable_cors(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
@@ -48,8 +46,6 @@ def enable_cors(func):
     return wrapper
 
 # Add a route that accepts POST requests from the React form
-
-
 @app.route('/predict', methods=['POST'])
 @cross_origin()
 def text_predict():
@@ -67,12 +63,16 @@ def stream_youtube():
     # Get the form data from the request
     payload = request.get_json()
     message = payload["message"]
-    # label = predict(message)
-    print(message)
+    producer_thread = threading.Thread(target=kafka_producer, args=(message,))
+    consumer_thread = threading.Thread(target=kafka_producer, args=(message,))
+    
+    producer_thread.start()
+    consumer_thread.start()
     # Return a response to the React form
     return {"code": 200, "data": {"label": message}, "msg": "Success"}
 
+
 # Python file
 if __name__ == '__main__':
-    # Run the Flask app
+    # Run the Flask app    
     app.run(debug=True)

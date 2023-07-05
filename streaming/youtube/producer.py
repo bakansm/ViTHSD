@@ -22,7 +22,9 @@ if(chat.is_alive()):
             predict_time = end-start
             data = {
                 'timestamp': raw_data.timestamp,
-                'datetime': raw_data.datetime, 
+                'datetime': raw_data.datetime,
+                'userid': raw_data.id,
+                'username': raw_data.author.name,
                 'message': raw_data.message,
                 'predict': predicted_data,
                 'predict-time': predict_time,
