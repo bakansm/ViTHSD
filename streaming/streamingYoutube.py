@@ -5,6 +5,7 @@ from flask import Flask, request
 from flask_cors import cross_origin, CORS
 from functools import wraps
 from producer import kafka_producer
+from consumer import kafka_consumer
 
 # Create a Flask app
 app = Flask(__name__)
@@ -64,10 +65,13 @@ def stream_youtube():
     payload = request.get_json()
     message = payload["message"]
     producer_thread = threading.Thread(target=kafka_producer, args=(message,))
-    consumer_thread = threading.Thread(target=kafka_producer, args=(message,))
+    consumer_thread = threading.Thread(target=kafka_consumer, args=(message,))
     
     producer_thread.start()
     consumer_thread.start()
+    
+    producer_thread.join()
+    consumer_thread.join()
     # Return a response to the React form
     return {"code": 200, "data": {"label": message}, "msg": "Success"}
 
