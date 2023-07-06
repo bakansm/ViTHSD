@@ -33,6 +33,6 @@ def kafka_producer (id):
                     produceRecord(data, producer, TOPIC)
     p = Process(target=stream_chat)
     p.start()
-    p.join()
-    producer.close()
+    # p.join()
+    # producer.close()
                 

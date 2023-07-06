@@ -69,9 +69,6 @@ def stream_youtube():
     
     producer_thread.start()
     consumer_thread.start()
-    
-    producer_thread.join()
-    consumer_thread.join()
     # Return a response to the React form
     return {"code": 200, "data": {"label": message}, "msg": "Success"}
 
