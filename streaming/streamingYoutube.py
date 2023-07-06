@@ -1,16 +1,40 @@
 import threading
+import time
+import subprocess
 
 from predict import predict
 from flask import Flask, request
 from flask_cors import cross_origin, CORS
 from functools import wraps
-from producer import kafka_producer
-from consumer import kafka_consumer
 
 # Create a Flask app
 app = Flask(__name__)
 CORS(app)
 app.config['CORS_HEADERS'] = 'Content-Type'
+
+def start_zookeeper ():
+    # Start ZooKeeper server
+    zookeeper_cmd = "~/kafka/bin/zookeeper-server-start.sh ~/kafka/config/zookeeper.properties &"
+    zookeeper_process = subprocess.Popen(zookeeper_cmd, shell=True)
+    time.sleep(6)
+    subprocess.run("clear", shell=True)
+
+def start_kafka ():
+# Start Kafka server
+    kafka_cmd = "~/kafka/bin/kafka-server-start.sh ~/kafka/config/server.properties &"
+    kafka_process = subprocess.Popen(kafka_cmd, shell=True)
+    time.sleep(6)
+    subprocess.run("clear", shell=True)
+
+def start_consumer (id):
+# Start Kafka server
+    kafka_cmd = f"python3 ~/Code/ViTHSD-Vietnamese-Targeted-Hate-Speech-Detection/streaming/consumer.py {id} &"
+    kafka_process = subprocess.Popen(kafka_cmd, shell=True)
+
+def start_producer (id):
+# Start Kafka server
+    kafka_cmd = f"python3 ~/Code/ViTHSD-Vietnamese-Targeted-Hate-Speech-Detection/streaming/producer.py {id} &"
+    kafka_process = subprocess.Popen(kafka_cmd, shell=True)
 
 def unpack(response, default_code=200):
     if not isinstance(response, tuple):
@@ -64,16 +88,22 @@ def stream_youtube():
     # Get the form data from the request
     payload = request.get_json()
     message = payload["message"]
-    producer_thread = threading.Thread(target=kafka_producer, args=(message,))
-    consumer_thread = threading.Thread(target=kafka_consumer, args=(message,))
+    consumer_thread = threading.Thread(target=start_consumer, args=(message,))
+    producer_thread = threading.Thread(target=start_producer, args=(message,))
     
-    producer_thread.start()
     consumer_thread.start()
+    producer_thread.start()
+    
+    # start_consumer(message)
+    # time.sleep(6)
+    # start_producer(message)
     # Return a response to the React form
     return {"code": 200, "data": {"label": message}, "msg": "Success"}
 
-
 # Python file
 if __name__ == '__main__':
-    # Run the Flask app    
-    app.run(host='0.0.0.0')
+    start_zookeeper()
+    time.sleep(10)
+    start_kafka()
+    time.sleep(10)
+    app.run(host='0.0.0.0', debug=True)

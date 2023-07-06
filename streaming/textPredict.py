@@ -1,5 +1,5 @@
 import time
-import sys
+import subprocess
 
 from predict import predict
 from flask import Flask, request
@@ -72,7 +72,26 @@ def stream_youtube():
     # Return a response to the React form
     return {"code": 200, "data": {"label": message}, "msg": "Success"}
 
+
+def start_zookeeper ():
+    # Start ZooKeeper server
+    zookeeper_cmd = "~/kafka/bin/zookeeper-server-start.sh ~/kafka/config/zookeeper.properties &"
+    zookeeper_process = subprocess.Popen(zookeeper_cmd, shell=True)
+    time.sleep(6)
+    result = subprocess.run("clear", shell=True)
+
+def start_kafka ():
+# Start Kafka server
+    kafka_cmd = "~/kafka/bin/kafka-server-start.sh ~/kafka/config/server.properties &"
+    kafka_process = subprocess.Popen(kafka_cmd, shell=True)
+    time.sleep(6)
+    result = subprocess.run("clear", shell=True)
+
 # Python file
 if __name__ == '__main__':
     # Run the Flask app
-    app.run(debug=True)
+    start_zookeeper()
+    time.sleep(6)
+    start_kafka()
+    time.sleep(6)
+    app.run(host='0.0.0.0', debug=True)
