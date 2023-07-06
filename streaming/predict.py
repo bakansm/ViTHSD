@@ -11,7 +11,7 @@ from transformers import AutoTokenizer, TFAutoModel, TFXLMRobertaModel
 class TargetedHSD:
     def __init__(self, model_path = None, tokenizer_path = None):
         if not model_path:
-            self.__model_path = '/home/bakansm/Code/ViTHSD-Vietnamese-Targeted-Hate-Speech-Detection/saved_model/bigrulstmcnn_xlmr.h5'
+            self.__model_path = '/home/ubuntu/ViTHSD-Vietnamese-Targeted-Hate-Speech-Detection/saved_model/bigrulstmcnn_xlmr.h5'
         else:
             self.__model_path = model_path
         if not tokenizer_path:
