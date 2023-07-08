@@ -11,7 +11,7 @@ from transformers import AutoTokenizer, TFAutoModel, TFXLMRobertaModel
 class TargetedHSD:
     def __init__(self, model_path = None, tokenizer_path = None):
         if not model_path:
-            self.__model_path = '../saved_model/bigrulstmcnn_xlmr.h5'
+            self.__model_path = '/home/ubuntu/ViTHSD-Vietnamese-Targeted-Hate-Speech-Detection/saved_model/bigrulstmcnn_xlmr.h5'
         else:
             self.__model_path = model_path
         if not tokenizer_path:
@@ -80,7 +80,7 @@ class TargetedHSD:
         # print(self.orginal_label)
         for i in range(0, len(self.orginal_label)):
             if self.orginal_label[i] > 0:
-                t = LABEL[i] + "#" + TYPE[int(self.orginal_label[i])]
+                t = LABEL[i] + ": " + TYPE[int(self.orginal_label[i])]
                 true_labels.append(t)
 
         self.result = true_labels

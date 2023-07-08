@@ -19,6 +19,6 @@ collection = db[TOPIC]
 while True:
     records = consumeRecord(consumer)
     for r in records:
-        print()
+        print(r)
         collection.insert_one(r).inserted_id
     

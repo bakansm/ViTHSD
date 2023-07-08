@@ -1,47 +1,54 @@
-import re
-STOPWORDS = '../../preprocess_data/vietnamese-stopwords-dash.txt'
+from underthesea import word_tokenize
+import pandas as pd
+TEENCODE = '/home/ubuntu/ViTHSD-Vietnamese-Targeted-Hate-Speech-Detection/preprocess_data/teencode.txt'
+teencode_df = pd.read_csv(TEENCODE,names=['teencode','map'],sep='\t',)
+teencode_list = teencode_df['teencode'].to_list()
+map_list = teencode_df['map'].to_list()
+def searchTeencode(word):
+  try:
+    global teencode_count
+    index = teencode_list.index(word)
+    map_word = map_list[index]
+    teencode_count += 1
+    return map_word
+  except:
+    pass
+    
+STOPWORDS = '/home/ubuntu/ViTHSD-Vietnamese-Targeted-Hate-Speech-Detection/preprocess_data/vietnamese-stopwords-dash.txt'
+
 with open(STOPWORDS, "r") as ins:
-    stopwords = []
+    stopword = []
     for line in ins:
-        dd = line.strip('\n')
-        stopwords.append(dd)
-    stopwords = set(stopwords)
+        stopword.append(line.strip('\n'))
 
-def filter_stop_words(train_sentences, stop_words):
-    new_sent = [word for word in train_sentences.split() if word not in stop_words]
-    train_sentences = ' '.join(new_sent)
-    return train_sentences
+def remove_stopwords(line):
+    global stopword_count
+    words = []
+    for word in line.strip().split():
+        if word not in stopword:
+            words.append(word)
+        if word in stopword:
+            stopword_count += 1
+    return ' '.join(words)
+    
+stopword_count = 0
+teencode_count =0
+def preprocess(sentence):
+  lenn = 0
+  sentence = str(sentence)
+  #Tokenize
+  List_tokens = word_tokenize(sentence,format='text')
+  List_tokens = word_tokenize(List_tokens)
 
-def deEmojify(text):
-    regrex_pattern = re.compile("["
-        u"\U0001F600-\U0001F64F"  # emoticons
-        u"\U0001F300-\U0001F5FF"  # symbols & pictographs
-        u"\U0001F680-\U0001F6FF"  # transport & map symbols
-        u"\U0001F1E0-\U0001F1FF"  # flags (iOS)
-        u"\U00002500-\U00002BEF"  # chinese char
-        u"\U00002702-\U000027B0"
-        u"\U00002702-\U000027B0"
-        u"\U000024C2-\U0001F251"
-        u"\U0001f926-\U0001f937"
-        u"\U00010000-\U0010ffff"
-        u"\u2640-\u2642" 
-        u"\u2600-\u2B55"
-        u"\u200d"
-        u"\u23cf"
-        u"\u23e9"
-        u"\u231a"
-        u"\ufe0f"  # dingbats
-        u"\u3030"
-                      "]+", re.UNICODE)
-    return re.sub(regrex_pattern,'',text)
-def preprocess(text, tokenized=True, lowercased=True, no_stw=True):
-#    text = ViTokenizer.tokenize(text)
-#    text = ' '.join(vncorenlp.tokenize(text)[0])
-    if no_stw == True:
-        text = filter_stop_words(text, stopwords)
-    text = deEmojify(text)
-    text = re.sub(r'[^\w\s]','',text) # remove punctuation
-    text = re.sub('\w*\d\w*', '', text) # remove words containing numbers
-    text = re.sub(r'http\S+', '', text)
-    text = text.lower() if lowercased else text
-    return text
+  #Teencode
+  for tokens_idx, text_tokens in enumerate(List_tokens):
+    deteencoded = searchTeencode(text_tokens)
+    if (deteencoded != None):
+        List_tokens[tokens_idx] = deteencoded
+
+  deteencode_sentence = (" ").join(List_tokens)
+  
+  #Stopwords
+  tokens_without_sw = remove_stopwords(deteencode_sentence)
+
+  return tokens_without_sw

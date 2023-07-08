@@ -6,7 +6,6 @@ from predict import predict
 from kafkaHelper import initProducer, produceRecord
 
 producer = initProducer()
-TOPIC = 'youtube'
 VID_ID = sys.argv[1]
 
 
@@ -30,5 +29,4 @@ if(chat.is_alive()):
                 'predict-time': predict_time,
             }
 
-            produceRecord(data, producer, TOPIC)
-            print(data)
+            produceRecord(data, producer, VID_ID)

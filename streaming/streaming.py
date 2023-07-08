@@ -15,26 +15,16 @@ app.config['CORS_HEADERS'] = 'Content-Type'
 def start_zookeeper ():
     # Start ZooKeeper server
     zookeeper_cmd = "~/kafka/bin/zookeeper-server-start.sh ~/kafka/config/zookeeper.properties &"
-    zookeeper_process = subprocess.Popen(zookeeper_cmd, shell=True)
+    subprocess.Popen(zookeeper_cmd, shell=True)
     time.sleep(6)
     subprocess.run("clear", shell=True)
 
 def start_kafka ():
 # Start Kafka server
     kafka_cmd = "~/kafka/bin/kafka-server-start.sh ~/kafka/config/server.properties &"
-    kafka_process = subprocess.Popen(kafka_cmd, shell=True)
+    subprocess.Popen(kafka_cmd, shell=True)
     time.sleep(6)
     subprocess.run("clear", shell=True)
-
-def start_consumer (id):
-# Start Kafka server
-    kafka_cmd = f"python3 ~/Code/ViTHSD-Vietnamese-Targeted-Hate-Speech-Detection/streaming/consumer.py {id} &"
-    kafka_process = subprocess.Popen(kafka_cmd, shell=True)
-
-def start_producer (id):
-# Start Kafka server
-    kafka_cmd = f"python3 ~/Code/ViTHSD-Vietnamese-Targeted-Hate-Speech-Detection/streaming/producer.py {id} &"
-    kafka_process = subprocess.Popen(kafka_cmd, shell=True)
 
 def unpack(response, default_code=200):
     if not isinstance(response, tuple):
@@ -70,7 +60,6 @@ def enable_cors(func):
 
     return wrapper
 
-# Add a route that accepts POST requests from the React form
 @app.route('/predict', methods=['POST'])
 @cross_origin()
 def text_predict():
@@ -82,25 +71,48 @@ def text_predict():
     # Return a response to the React form
     return {"code": 200, "data": {"label": label}, "msg": "Success"}
 
+def youtube_consumer (id):
+    kafka_cmd = f"python3 ~/Code/ViTHSD-Vietnamese-Targeted-Hate-Speech-Detection/streaming/youtube/consumer.py {id} &"
+    subprocess.Popen(kafka_cmd, shell=True)
+
+def youtube_producer (id):
+    kafka_cmd = f"python3 ~/Code/ViTHSD-Vietnamese-Targeted-Hate-Speech-Detection/streaming/youtube/producer.py {id} &"
+    subprocess.Popen(kafka_cmd, shell=True)
+
 @app.route('/streaming/youtube', methods=['POST'])
 @cross_origin()
 def stream_youtube():
-    # Get the form data from the request
     payload = request.get_json()
     message = payload["message"]
-    consumer_thread = threading.Thread(target=start_consumer, args=(message,))
-    producer_thread = threading.Thread(target=start_producer, args=(message,))
+    consumer_thread = threading.Thread(target=youtube_consumer, args=(message,))
+    producer_thread = threading.Thread(target=youtube_producer, args=(message,))
     
     consumer_thread.start()
     producer_thread.start()
-    
-    # start_consumer(message)
-    # time.sleep(6)
-    # start_producer(message)
-    # Return a response to the React form
+
     return {"code": 200, "data": {"label": message}, "msg": "Success"}
 
-# Python file
+def tiktok_consumer (id):
+    kafka_cmd = f"python3 ~/Code/ViTHSD-Vietnamese-Targeted-Hate-Speech-Detection/streaming/tiktok/consumer.py {id} &"
+    subprocess.Popen(kafka_cmd, shell=True)
+
+def tiktok_producer (id):
+    kafka_cmd = f"python3 ~/Code/ViTHSD-Vietnamese-Targeted-Hate-Speech-Detection/streaming/tiktok/producer.py {id} &"
+    subprocess.Popen(kafka_cmd, shell=True)
+
+@app.route('/streaming/tiktok', methods=['POST'])
+@cross_origin()
+def stream_tiktok():
+    payload = request.get_json()
+    message = payload["message"]
+    consumer_thread = threading.Thread(target=tiktok_consumer, args=(message,))
+    producer_thread = threading.Thread(target=tiktok_producer, args=(message,))
+    
+    consumer_thread.start()
+    producer_thread.start()
+
+    return {"code": 200, "data": {"label": message}, "msg": "Success"}
+
 if __name__ == '__main__':
     start_zookeeper()
     time.sleep(10)
