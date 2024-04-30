@@ -1,8 +1,11 @@
 # ViTHSD-Vietnamese-Targeted-Hate-Speech-Detection
+Vietnamese Targeted Hate Speech Detection on Social Media Texts.  
+Contact information: Mr. Son T. Luu  
+Email: sonlt@uit.edu.vn (Alternative: son.lt1103@gmail.com)
 
 ## Data
 
-Updating
+10,000 comments, each comment has 6 targets with three relevant hateful levels.
 
 ## Model
 
