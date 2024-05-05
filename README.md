@@ -4,7 +4,7 @@ Contact information: Mr. Son T. Luu
 Email: sonlt@uit.edu.vn (Alternative: son.lt1103@gmail.com)
 
 ## Data
-10,000 comments, each comment has 6 targets with three relevant hateful levels.   
+10,000 comments, each comment has 05 targets with three relevant hateful levels.   
 
 ## Publication 
 https://arxiv.org/abs/2404.19252    
