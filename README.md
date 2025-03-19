@@ -10,6 +10,22 @@ Email: sonlt@uit.edu.vn (Alternative: son.lt1103@gmail.com)
 https://arxiv.org/abs/2404.19252    
 (Please cite this paper when using the dataset)
 
+Citation:   
+Vo, C.N., Huynh, K.B., Luu, S.T. et al. ViTHSD: exploiting hatred by targets for hate speech detection on Vietnamese social media texts. J Comput Soc Sc 8, 30 (2025). https://doi.org/10.1007/s42001-024-00348-6
+
+```
+@article{vo2025vithsd,
+  title={ViTHSD: exploiting hatred by targets for hate speech detection on Vietnamese social media texts},
+  author={Vo, Cuong Nhat and Huynh, Khanh Bao and Luu, Son T and Do, Trong-Hop},
+  journal={Journal of Computational Social Science},
+  volume={8},
+  number={2},
+  pages={30},
+  year={2025},
+  publisher={Springer}
+}
+```
+
 ## Model
 
 Updating
