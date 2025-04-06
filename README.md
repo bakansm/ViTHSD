@@ -6,6 +6,9 @@ Email: sonlt@uit.edu.vn (Alternative: son.lt1103@gmail.com)
 ## Data
 10,000 comments, each comment has 05 targets with three relevant hateful levels.   
 
+## Use the dataset:
+Please find the dataset directly from hugging-face here: https://huggingface.co/datasets/sonlam1102/vithsd.  
+
 ## Publication 
 https://arxiv.org/abs/2404.19252    
 (Please cite this paper when using the dataset)
